@@ -25,13 +25,26 @@ async function getImagesFolder(imagesFolder) {
   });
 }
 
+// Name	width	heigth	aj. Width	  aj. Heigth	  fator
+// Full	1920	1080
+// baix 1778	1000	  1778	      1000,125	  0,926041666667
+// main	730	  486	    864	        486	        0,450000000000
+// icon	320	  212	    376,89408	  212,00292	  0,196299000000
+
 async function imageReadFlipAndSave(file) {
   try {
+    const width = 864;
+    const height = 486;
+    const qualityImageSave = 60;
+    const nameAdd = width - 134 + "x" + height + "-";
+
     var image = await readImage(file);
     // image = await flipImage(image);
-    image = await resizeImage(image, 1920, 1080);
-    image = await qualityImage(image, 60);
-    await saveImage(image, file);
+    image = await resizeImage(image, width, height);
+    image = await qualityImage(image, qualityImageSave);
+    image = await cutImage(image, (width - 730) / 2, 0, 730, 486);
+    var namefile = await getPath(file, nameAdd);
+    await saveImage(image, namefile);
   } catch (error) {
     console.log(`error: ${error}, in file: ${file}`);
   }
@@ -57,15 +70,23 @@ async function qualityImage(image, quality) {
   return imageQuality;
 }
 
-async function saveImage(image, nameFile) {
+async function cutImage(image, pontX, pontY, width, heigth) {
+  const imageCut = await image.crop(pontX, pontY, width, heigth);
+  return imageCut;
+}
+
+function getPath(nameFile, nameAdd) {
   const dirName = path.dirname(nameFile);
   const baseName = path.basename(nameFile);
-  const baseNameNew = "Flip-" + baseName;
+  const baseNameNew = nameAdd + baseName;
 
-  const nameFileFlip = path.join(dirName, baseNameNew);
+  const namefile = path.join(dirName, baseNameNew);
+  return namefile;
+}
 
-  await image.write(nameFileFlip);
-  console.log(nameFileFlip);
+async function saveImage(image, nameFile) {
+  await image.write(nameFile);
+  console.log(nameFile);
 }
 
 fileReadFolder();
