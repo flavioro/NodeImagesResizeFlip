@@ -6,11 +6,11 @@ async function fileReadFolder() {
   try {
     // const imagesFolder = '../Site/HTML Prototipagem/img/img-projetos/10.001.A/320x212-Carousel-icon';
     const imagesFolder =
-      "../Site/HTML Prototipagem/img/img-projetos/10.007a/planta-baixa";
+      "../Site/HTML Prototipagem/img/img-projetos/10.001.A/1920x1080";
     path.dirname(imagesFolder);
 
     await getImagesFolder(imagesFolder);
-    console.log("Image processing...");
+    console.log("Horizontal mirror image processing");
   } catch (error) {
     console.log(`error: ${error}, in folder/diretory: ${imagesFolder}`);
   }
@@ -33,38 +33,16 @@ async function getImagesFolder(imagesFolder) {
 
 async function imageReadFlipAndSave(file) {
   try {
-    // 864 x 486 => 730 x 486 - main
-    // const widthStart = 864;
-    // const widthEnd = widthStart - 134 //730
-    // const height = 486;
-    // const qualityImageSave = 60;
-    // const nameAdd = widthEnd + "x" + height + "-";
-
-    // 376 x 212 =>  320 x 212 - icon
-    // const widthStart = 376;
-    // const widthEnd = widthStart - 56 //320
-    // const height = 212;
-    // const qualityImageSave = 60;
-    // const nameAdd = widthEnd + "x" + height + "-";
-
-    // 1778 x 1000 - Planta baixa
-    const widthStart = 1778;
-    const height = 1000;
+    const width = 864;
+    const height = 486;
     const qualityImageSave = 60;
-    const nameAdd = widthStart + "x" + height + "-";
+    const nameAdd = width - 134 + "x" + height + "-";
 
     var image = await readImage(file);
     // image = await flipImage(image);
-    image = await resizeImage(image, widthStart, height);
+    image = await resizeImage(image, width, height);
     image = await qualityImage(image, qualityImageSave);
-    // 864 x 486 => 730 x 486 - main
-    // image = await cutImage(image, (widthStart - widthEnd) / 2, 0, widthEnd, height);
-
-    // 376 x 212 =>  320 x 212 - icon
-    // image = await cutImage(image, (widthStart - widthEnd) / 2, 0, widthEnd, height);
-
-    // 1778 x 1000 não precisa cortar - Planta baixa
-
+    image = await cutImage(image, (width - 730) / 2, 0, 730, 486);
     var namefile = await getPath(file, nameAdd);
     await saveImage(image, namefile);
   } catch (error) {
