@@ -2,14 +2,27 @@ const fs = require("fs");
 var path = require("path");
 const Jimp = require("jimp");
 
+var nameDimenson = "";
+var widthStartImage = 0;
+var widthEndImage = widthStartImage;
+var widthImageDifference = 0
+var heightImage = 0;
+var qualityImageSave = 60;
+var addTextNameFile = "";
+
 async function fileReadFolder() {
   try {
     // const imagesFolder = '../Site/HTML Prototipagem/img/img-projetos/10.001.A/320x212-Carousel-icon';
     const imagesFolder =
-      "../Site/HTML Prototipagem/img/img-projetos/10.007a/planta-baixa";
+      "carousel";
     path.dirname(imagesFolder);
 
+    // await setDimensonFull();
+    // await setDimensonMain();
+    await setDimensonIcon();
+
     await getImagesFolder(imagesFolder);
+
     console.log("Image processing...");
   } catch (error) {
     console.log(`error: ${error}, in folder/diretory: ${imagesFolder}`);
@@ -17,7 +30,7 @@ async function fileReadFolder() {
 }
 
 async function getImagesFolder(imagesFolder) {
-  fs.readdirSync(imagesFolder).forEach((file) => {
+  await fs.readdirSync(imagesFolder).forEach((file) => {
     const pathFullFile = `${imagesFolder + "/" + file}`;
 
     console.log(`Image Processing... ${pathFullFile}`);
@@ -25,47 +38,22 @@ async function getImagesFolder(imagesFolder) {
   });
 }
 
-// Name	width	heigth	aj. Width	  aj. Heigth	  fator
-// Full	1920	1080
-// baix 1778	1000	  1778	      1000,125	  0,926041666667
-// main	730	  486	    864	        486	        0,450000000000
-// icon	320	  212	    376,89408	  212,00292	  0,196299000000
-
 async function imageReadFlipAndSave(file) {
   try {
-    // 864 x 486 => 730 x 486 - main
-    // const widthStart = 864;
-    // const widthEnd = widthStart - 134 //730
-    // const height = 486;
-    // const qualityImageSave = 60;
-    // const nameAdd = widthEnd + "x" + height + "-";
 
-    // 376 x 212 =>  320 x 212 - icon
-    // const widthStart = 376;
-    // const widthEnd = widthStart - 56 //320
-    // const height = 212;
-    // const qualityImageSave = 60;
-    // const nameAdd = widthEnd + "x" + height + "-";
-
-    // 1778 x 1000 - Planta baixa
-    const widthStart = 1778;
-    const height = 1000;
-    const qualityImageSave = 60;
-    const nameAdd = widthStart + "x" + height + "-";
-
-    var image = await readImage(file);
+     var image = await readImage(file);
     // image = await flipImage(image);
-    image = await resizeImage(image, widthStart, height);
+
+    image = await resizeImage(image, widthStartImage, heightImage);
     image = await qualityImage(image, qualityImageSave);
-    // 864 x 486 => 730 x 486 - main
-    // image = await cutImage(image, (widthStart - widthEnd) / 2, 0, widthEnd, height);
+    
+    if (widthImageDifference != 0) {
+      // console.log(`image,  (widthStartImage ${widthStartImage} - widthEndImage ${widthEndImage}) / 2, 0, widthStartImage ${widthStartImage}, heightImage ${heightImage}`);
+      // 
+      image = await cutImage(image, (widthStartImage - widthEndImage) / 2, 0, widthEndImage, heightImage);
+    }
 
-    // 376 x 212 =>  320 x 212 - icon
-    // image = await cutImage(image, (widthStart - widthEnd) / 2, 0, widthEnd, height);
-
-    // 1778 x 1000 não precisa cortar - Planta baixa
-
-    var namefile = await getPath(file, nameAdd);
+    var namefile = await getPath(file, addTextNameFile);
     await saveImage(image, namefile);
   } catch (error) {
     console.log(`error: ${error}, in file: ${file}`);
@@ -98,17 +86,65 @@ async function cutImage(image, pontX, pontY, width, heigth) {
 }
 
 function getPath(nameFile, nameAdd) {
-  const dirName = path.dirname(nameFile);
+  const folderPath = path.dirname(nameFile);
+  
+  // const folderPathChange = path.join(__dirname, nameDimenson); // funcionou para a base do programa
+  const folderPathChange = path.join(folderPath, nameDimenson); 
+  
   const baseName = path.basename(nameFile);
   const baseNameNew = nameAdd + baseName;
 
-  const namefile = path.join(dirName, baseNameNew);
+  const namefile = path.join(folderPathChange, baseNameNew);
   return namefile;
 }
 
 async function saveImage(image, nameFile) {
   await image.write(nameFile);
   console.log(nameFile);
+}
+
+// Name	width	heigth	aj. Width	  aj. Heigth	  fator
+// Full	1920	1080
+// baix 1778	1000	  1778	      1000,125	  0,926041666667
+// main	730	  486	    864	        486	        0,450000000000
+// icon	320	  212	    376,89408	  212,00292	  0,196299000000
+async function setDimensonFull() {
+  nameDimenson = "carousel-full";
+  widthStartImage = 1920;
+  widthEndImage = widthStartImage;
+  widthImageDifference = 0;
+  heightImage = 1080;
+  addTextNameFile ="";
+}
+
+async function setDimensonMain() {
+  nameDimenson = "carousel-main";
+  // 864 x 486 => 730 x 486 - main
+  widthStartImage = 864;
+  widthImageDifference = 134;
+  widthEndImage = widthStartImage - widthImageDifference //730
+  heightImage = 486;
+  addTextNameFile = "";
+}
+
+async function setDimensonIcon() {
+  nameDimenson = "carousel-icon";
+    // 376 x 212 =>  320 x 212 - icon
+  widthStartImage = 376;
+  widthImageDifference = 56;
+  widthEndImage = widthStartImage - widthImageDifference //320
+  heightImage = 212;
+  addTextNameFile = "";
+}
+
+async function setDimensonPlantaBaixa() {
+  nameDimenson = "planta-baixa";
+  // 1778 x 1000 - Planta baixa
+  widthStartImage = 1778;
+  widthImageDifference = 0;
+  widthEndImage = widthStartImage;
+  heightImage = 1000;
+  addTextNameFile = "";
 }
 
 fileReadFolder();
